@@ -312,7 +312,6 @@ const HoneycombReversi = () => {
         justifyContent: 'center',
         minHeight: '100vh',
         background: 'linear-gradient(to bottom right, #0f766e, #1e293b)',
-        padding: '32px',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}>
         <h1 style={{

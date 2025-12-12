@@ -453,12 +453,11 @@ const HoneycombReversi = () => {
       justifyContent: 'center',
       minHeight: '100vh',
       background: 'linear-gradient(to bottom right, #0f766e, #1e293b)',
-      padding: '32px',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       <div style={{
-        padding: '32px',
-        maxWidth: '600px'
+        maxWidth: '600px',
+        width: '100%'
       }}>
         <h1 style={{
           fontSize: '36px',
@@ -559,7 +558,7 @@ const HoneycombReversi = () => {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <svg width="500" height="500" viewBox="-200 -200 400 400">
+          <svg width="100%" height="100%" viewBox="-200 -200 400 400">
             <style>
               {`
                 @keyframes pulse {

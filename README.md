@@ -6,7 +6,7 @@
 
 ## 座標系
 
-HoneycombReversiでは、六角形グリッドを効率的に扱うために**Cube Coordinates**をを採用しています。
+HoneycombReversiでは、六角形グリッドを効率的に扱うために**Cube Coordinates**を採用しています。
 
 制約条件： `x + y + z = 0`
 

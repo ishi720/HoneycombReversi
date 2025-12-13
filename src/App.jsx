@@ -1,5 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
+
+// 効果音を再生するカスタムフック
+const useSound = (soundUrl) => {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(soundUrl);
+    audioRef.current.volume = 0.5;
+  }, [soundUrl]);
+
+  const play = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {
+        // 自動再生がブロックされた場合は無視
+      });
+    }
+  }, []);
+
+  return play;
+};
 
 // Cube座標系のヘルパー関数
 const cubeAdd = (a, b) => ({ q: a.q + b.q, r: a.r + b.r, s: a.s + b.s });
@@ -197,6 +218,10 @@ const HoneycombReversi = () => {
   const [cpuDifficulty, setCpuDifficulty] = useState(CPU_DIFFICULTY.HARD);
   const [cpuThinking, setCpuThinking] = useState(false);
   const [lastMove, setLastMove] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  // 効果音
+  const playPlaceSound = useSound('/place-sound.mp3');
 
   const hexSize = 25;
 
@@ -217,11 +242,16 @@ const HoneycombReversi = () => {
       newBoard.set(flipKey, currentPlayer);
     });
 
+    // 効果音を再生
+    if (soundEnabled) {
+      playPlaceSound();
+    }
+
     setBoard(newBoard);
     setScores(calculateScores(newBoard));
     setLastMove(key);
     setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
-  }, [gameOver, cpuThinking, gameMode, currentPlayer, validMoves, board]);
+  }, [gameOver, cpuThinking, gameMode, currentPlayer, validMoves, board, soundEnabled, playPlaceSound]);
 
   // CPUの手を実行
   const executeCPUMove = useCallback(() => {
@@ -251,6 +281,11 @@ const HoneycombReversi = () => {
           newBoard.set(flipKey, 'white');
         });
 
+        // 効果音を再生
+        if (soundEnabled) {
+          playPlaceSound();
+        }
+
         setBoard(newBoard);
         setScores(calculateScores(newBoard));
         setLastMove(moveKey);
@@ -259,7 +294,7 @@ const HoneycombReversi = () => {
 
       setCpuThinking(false);
     }, 1000 + Math.random() * 500); // 思考時間
-  }, [gameMode, currentPlayer, gameOver, board, cpuDifficulty]);
+  }, [gameMode, currentPlayer, gameOver, board, cpuDifficulty, soundEnabled, playPlaceSound]);
 
   // 有効な手を更新
   useEffect(() => {
@@ -589,6 +624,24 @@ const HoneycombReversi = () => {
             onMouseOut={(e) => e.target.style.background = '#0d9488'}
           >
             リセット
+          </button>
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            style={{
+              padding: '12px 24px',
+              background: soundEnabled ? '#0d9488' : '#64748b',
+              color: 'white',
+              fontWeight: 'bold',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              transition: 'background 0.3s'
+            }}
+            onMouseOver={(e) => e.target.style.background = soundEnabled ? '#0f766e' : '#475569'}
+            onMouseOut={(e) => e.target.style.background = soundEnabled ? '#0d9488' : '#64748b'}
+          >
+            {soundEnabled ? '🔊' : '🔇'}
           </button>
           <button
             onClick={backToMenu}

@@ -553,7 +553,7 @@ const HoneycombReversi = () => {
             fontWeight: 'bold',
             color: '#5eead4'
           }}>
-            ゲーム終了！ {scores.black > scores.white ? (gameMode === 'cpu' ? 'あなた' : '黒') : scores.white > scores.black ? (gameMode === 'cpu' ? 'CPU' : '白') : '引き分け'}の勝ち！
+            {scores.black > scores.white ? (gameMode === 'cpu' ? 'あなた' : '黒') : scores.white > scores.black ? (gameMode === 'cpu' ? 'CPU' : '白') : '引き分け'}の勝ち！
           </div>
         )}
 

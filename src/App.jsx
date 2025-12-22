@@ -221,7 +221,7 @@ const HoneycombReversi = () => {
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   // 効果音
-  const playPlaceSound = useSound('/place-sound.mp3');
+  const playPlaceSound = useSound('./place-sound.mp3');
 
   const hexSize = 25;
 

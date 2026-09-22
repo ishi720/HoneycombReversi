@@ -219,6 +219,10 @@ const HoneycombReversi = () => {
   const [cpuThinking, setCpuThinking] = useState(false);
   const [lastMove, setLastMove] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [turnOrder, setTurnOrder] = useState('first'); // 'first', 'second', 'random'
+  const [humanColor, setHumanColor] = useState('black');
+  const [showCpuModal, setShowCpuModal] = useState(false);
+  const cpuColor = humanColor === 'black' ? 'white' : 'black';
 
   // 効果音
   const playPlaceSound = useSound('./place-sound.mp3');
@@ -228,7 +232,7 @@ const HoneycombReversi = () => {
   // セルをクリック（プレイヤーの手）
   const handleCellClick = useCallback((q, r, s) => {
     if (gameOver || cpuThinking) return;
-    if (gameMode === 'cpu' && currentPlayer === 'white') return; // CPUのターン中は操作不可
+    if (gameMode === 'cpu' && currentPlayer === cpuColor) return; // CPUのターン中は操作不可
 
     const key = `${q},${r},${s}`;
     if (!validMoves.has(key)) return;
@@ -251,34 +255,34 @@ const HoneycombReversi = () => {
     setScores(calculateScores(newBoard));
     setLastMove(key);
     setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
-  }, [gameOver, cpuThinking, gameMode, currentPlayer, validMoves, board, soundEnabled, playPlaceSound]);
+  }, [gameOver, cpuThinking, gameMode, cpuColor, currentPlayer, validMoves, board, soundEnabled, playPlaceSound]);
 
   // CPUの手を実行
   const executeCPUMove = useCallback(() => {
-    if (gameMode !== 'cpu' || currentPlayer !== 'white' || gameOver) return;
+    if (gameMode !== 'cpu' || currentPlayer !== cpuColor || gameOver) return;
 
     setCpuThinking(true);
 
     // 思考時間をシミュレート
     setTimeout(() => {
-      const currentValidMoves = calculateValidMoves('white', board);
+      const currentValidMoves = calculateValidMoves(cpuColor, board);
 
       if (currentValidMoves.size === 0) {
         setCpuThinking(false);
         return;
       }
 
-      const moveKey = selectCPUMove(currentValidMoves, 'white', board, cpuDifficulty);
+      const moveKey = selectCPUMove(currentValidMoves, cpuColor, board, cpuDifficulty);
 
       if (moveKey) {
         const [q, r, s] = moveKey.split(',').map(Number);
         const coord = { q, r, s };
-        const flips = getFlips(coord, 'white', board);
+        const flips = getFlips(coord, cpuColor, board);
 
         const newBoard = new Map(board);
-        newBoard.set(moveKey, 'white');
+        newBoard.set(moveKey, cpuColor);
         flips.forEach(flipKey => {
-          newBoard.set(flipKey, 'white');
+          newBoard.set(flipKey, cpuColor);
         });
 
         // 効果音を再生
@@ -289,12 +293,12 @@ const HoneycombReversi = () => {
         setBoard(newBoard);
         setScores(calculateScores(newBoard));
         setLastMove(moveKey);
-        setCurrentPlayer('black');
+        setCurrentPlayer(humanColor);
       }
 
       setCpuThinking(false);
     }, 1000 + Math.random() * 500); // 思考時間
-  }, [gameMode, currentPlayer, gameOver, board, cpuDifficulty, soundEnabled, playPlaceSound]);
+  }, [gameMode, currentPlayer, cpuColor, humanColor, gameOver, board, cpuDifficulty, soundEnabled, playPlaceSound]);
 
   // 有効な手を更新
   useEffect(() => {
@@ -316,10 +320,10 @@ const HoneycombReversi = () => {
 
   // CPUのターン処理
   useEffect(() => {
-    if (gameMode === 'cpu' && currentPlayer === 'white' && !gameOver && validMoves.size > 0) {
+    if (gameMode === 'cpu' && currentPlayer === cpuColor && !gameOver && validMoves.size > 0) {
       executeCPUMove();
     }
-  }, [gameMode, currentPlayer, gameOver, validMoves, executeCPUMove]);
+  }, [gameMode, currentPlayer, cpuColor, gameOver, validMoves, executeCPUMove]);
 
   // ゲームをリセット
   const resetGame = () => {
@@ -335,6 +339,16 @@ const HoneycombReversi = () => {
   const backToMenu = () => {
     resetGame();
     setGameMode(null);
+  };
+
+  // CPU対戦を開始（先攻/後攻/ランダムを解決）
+  const startCPUGame = () => {
+    const resolvedColor = turnOrder === 'random'
+      ? (Math.random() < 0.5 ? 'black' : 'white')
+      : (turnOrder === 'first' ? 'black' : 'white');
+    setHumanColor(resolvedColor);
+    setGameMode('cpu');
+    setShowCpuModal(false);
   };
 
   // ゲームモード選択画面
@@ -392,7 +406,7 @@ const HoneycombReversi = () => {
           </button>
 
           <button
-            onClick={() => setGameMode('cpu')}
+            onClick={() => setShowCpuModal(true)}
             style={{
               padding: '20px 32px',
               background: '#0d9488',
@@ -451,6 +465,99 @@ const HoneycombReversi = () => {
             ))}
           </div>
         </div>
+
+        {/* CPU対戦の先攻/後攻選択ポップアップ */}
+        {showCpuModal && (
+          <div
+            onClick={() => setShowCpuModal(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 100
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#1e293b',
+                borderRadius: '16px',
+                padding: '32px',
+                width: '320px',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <h2 style={{ color: '#fff', fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
+                先攻/後攻を選択
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                {[
+                  { key: 'first', label: '先攻' },
+                  { key: 'second', label: '後攻' },
+                  { key: 'random', label: 'ランダム' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTurnOrder(key)}
+                    style={{
+                      padding: '12px 20px',
+                      background: turnOrder === key ? '#14b8a6' : '#334155',
+                      color: 'white',
+                      fontWeight: turnOrder === key ? 'bold' : 'normal',
+                      borderRadius: '8px',
+                      border: turnOrder === key ? '2px solid #5eead4' : '2px solid transparent',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      transition: 'all 0.3s'
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setShowCpuModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: '#475569',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px'
+                  }}
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={startCPUGame}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: '#0d9488',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px'
+                  }}
+                >
+                  対戦開始
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -466,7 +573,7 @@ const HoneycombReversi = () => {
         const { x, y } = cubeToPixel(q, r, hexSize);
         const key = `${q},${r},${s}`;
         const piece = board.get(key);
-        const isValid = validMoves.has(key) && (gameMode === 'pvp' || currentPlayer === 'black');
+        const isValid = validMoves.has(key) && (gameMode === 'pvp' || currentPlayer === humanColor);
         const isLastMove = key === lastMove;
 
         cells.push(
@@ -539,7 +646,7 @@ const HoneycombReversi = () => {
             }}></div>
             <span style={{ color: 'white', fontWeight: '600' }}>{scores.black}</span>
             {gameMode === 'cpu' && (
-              <span style={{ fontSize: '12px', color: '#ccc' }}>あなた</span>
+              <span style={{ fontSize: '12px', color: '#ccc' }}>{humanColor === 'black' ? 'あなた' : 'CPU'}</span>
             )}
           </div>
           <div style={{
@@ -561,7 +668,7 @@ const HoneycombReversi = () => {
             }}></div>
             <span style={{ color: 'white', fontWeight: '600' }}>{scores.white}</span>
             {gameMode === 'cpu' && (
-              <span style={{ fontSize: '12px', color: '#ccc' }}>CPU</span>
+              <span style={{ fontSize: '12px', color: '#ccc' }}>{humanColor === 'white' ? 'あなた' : 'CPU'}</span>
             )}
           </div>
         </div>
@@ -588,7 +695,11 @@ const HoneycombReversi = () => {
             fontWeight: 'bold',
             color: '#5eead4'
           }}>
-            {scores.black > scores.white ? (gameMode === 'cpu' ? 'あなた' : '黒') : scores.white > scores.black ? (gameMode === 'cpu' ? 'CPU' : '白') : '引き分け'}の勝ち！
+            {scores.black > scores.white
+              ? (gameMode === 'cpu' ? (humanColor === 'black' ? 'あなた' : 'CPU') : '黒')
+              : scores.white > scores.black
+                ? (gameMode === 'cpu' ? (humanColor === 'white' ? 'あなた' : 'CPU') : '白')
+                : '引き分け'}の勝ち！
           </div>
         )}
 

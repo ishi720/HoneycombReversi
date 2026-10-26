@@ -696,10 +696,10 @@ const HoneycombReversi = () => {
             color: '#5eead4'
           }}>
             {scores.black > scores.white
-              ? (gameMode === 'cpu' ? (humanColor === 'black' ? 'あなた' : 'CPU') : '黒')
+              ? `${gameMode === 'cpu' ? (humanColor === 'black' ? 'あなた' : 'CPU') : '黒'}の勝ち！`
               : scores.white > scores.black
-                ? (gameMode === 'cpu' ? (humanColor === 'white' ? 'あなた' : 'CPU') : '白')
-                : '引き分け'}の勝ち！
+                ? `${gameMode === 'cpu' ? (humanColor === 'white' ? 'あなた' : 'CPU') : '白'}の勝ち！`
+                : '引き分け！'}
           </div>
         )}
 
